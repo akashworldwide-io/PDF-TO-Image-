@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PDF to Image Converter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f0f0f;
+  color:white;
+  text-align:center;
+}
+
+.container{
+  max-width:450px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+  box-shadow:0 0 20px rgba(0,0,0,0.6);
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  margin-top:10px;
+  background:linear-gradient(45deg,#222,#444);
+  color:white;
+  cursor:pointer;
+}
+
+canvas{
+  width:100%;
+  margin-top:15px;
+  border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>PDF to Image Converter</h2>
+
+<div class="card">
+<input type="file" id="pdfFile" accept="application/pdf">
+<button onclick="convertPDF()">Convert to Images</button>
+</div>
+
+<div class="card" id="output"></div>
+
+</div>
+
+<script>
+
+async function convertPDF(){
+    const file = document.getElementById('pdfFile').files[0];
+    if(!file){
+        alert("Please select a PDF file");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+
+    reader.onload = async function(){
+        const typedarray = new Uint8Array(this.result);
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+        const output = document.getElementById("output");
+        output.innerHTML = "";
+
+        for(let pageNum = 1; pageNum <= pdf.numPages; pageNum++){
+
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+
+            output.appendChild(canvas);
+
+            // Download Button
+            const link = document.createElement("a");
+            link.innerText = "Download Page " + pageNum;
+            link.style.display = "block";
+            link.style.margin = "10px";
+            link.style.color = "#4da6ff";
+            link.href = canvas.toDataURL("image/png");
+            link.download = "page_" + pageNum + ".png";
+            output.appendChild(link);
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>
