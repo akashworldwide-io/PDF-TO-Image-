@@ -1,0 +1,11 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "akashworldwide-io.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "akashworldwide-io.github",
+  "start_url": "https://akashworldwide-io.github.io/PDF-TO-Image",
+  "theme_color": "#ffffff"
+}
