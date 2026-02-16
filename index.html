@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF to Image Converter</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
 <style>
@@ -15,7 +20,7 @@ body{
 }
 
 .container{
-  max-width:450px;
+  max-width:500px;
   margin:auto;
   padding:20px;
 }
@@ -25,7 +30,17 @@ body{
   padding:20px;
   border-radius:15px;
   margin-bottom:20px;
-  box-shadow:0 0 20px rgba(0,0,0,0.6);
+  box-shadow:0 0 25px rgba(0,0,0,0.7);
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+input[type="file"]{
+  width:100%;
+  margin-bottom:15px;
+  color:white;
 }
 
 button{
@@ -33,16 +48,30 @@ button{
   padding:12px;
   border:none;
   border-radius:10px;
-  margin-top:10px;
   background:linear-gradient(45deg,#222,#444);
   color:white;
+  font-size:16px;
   cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  background:linear-gradient(45deg,#333,#666);
 }
 
 canvas{
   width:100%;
   margin-top:15px;
   border-radius:10px;
+  background:#111;
+}
+
+.download-link{
+  display:block;
+  margin:10px 0;
+  color:#4da6ff;
+  text-decoration:none;
+  font-weight:bold;
 }
 
 </style>
@@ -59,16 +88,24 @@ canvas{
 <button onclick="convertPDF()">Convert to Images</button>
 </div>
 
-<div class="card" id="output"></div>
+<div class="card" id="output">
+<p>Converted pages will appear here</p>
+</div>
 
 </div>
 
 <script>
 
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+
 async function convertPDF(){
+
     const file = document.getElementById('pdfFile').files[0];
     if(!file){
-        alert("Please select a PDF file");
+        alert("Please select a PDF file first");
         return;
     }
 
@@ -76,6 +113,7 @@ async function convertPDF(){
     reader.readAsArrayBuffer(file);
 
     reader.onload = async function(){
+
         const typedarray = new Uint8Array(this.result);
         const pdf = await pdfjsLib.getDocument(typedarray).promise;
 
@@ -85,10 +123,11 @@ async function convertPDF(){
         for(let pageNum = 1; pageNum <= pdf.numPages; pageNum++){
 
             const page = await pdf.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.5 });
+            const viewport = page.getViewport({ scale: 2 });
 
             const canvas = document.createElement("canvas");
             const context = canvas.getContext("2d");
+
             canvas.height = viewport.height;
             canvas.width = viewport.width;
 
@@ -99,12 +138,9 @@ async function convertPDF(){
 
             output.appendChild(canvas);
 
-            // Download Button
             const link = document.createElement("a");
+            link.className = "download-link";
             link.innerText = "Download Page " + pageNum;
-            link.style.display = "block";
-            link.style.margin = "10px";
-            link.style.color = "#4da6ff";
             link.href = canvas.toDataURL("image/png");
             link.download = "page_" + pageNum + ".png";
             output.appendChild(link);
